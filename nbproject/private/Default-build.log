@@ -1,0 +1,13 @@
+cc -c -Wall -I . -std=c99 -g connection.c -o connection.o
+cc -MM -Wall -I . -std=c99 -g connection.c > connection.d
+cc -c -Wall -I . -std=c99 -g server.c -o server.o
+cc -MM -Wall -I . -std=c99 -g server.c > server.d
+cc -c -Wall -I . -std=c99 -g main.c -o main.o
+cc -MM -Wall -I . -std=c99 -g main.c > main.d
+cc -c -Wall -I . -std=c99 -g service.c -o service.o
+service.c: In function 'handle_connection':
+service.c:157:11: warning: unused variable 'p' [-Wunused-variable]
+     void *p = NULL;
+           ^
+cc -MM -Wall -I . -std=c99 -g service.c > service.d
+cc connection.o server.o main.o service.o -o reverse
