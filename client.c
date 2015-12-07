@@ -92,6 +92,7 @@ int check_reverse(char* input, char* reverse_answer)
     int result = 0;
     unsigned inPos = 0;
     strncpy(myReverse, input, strlen(input)-1);
+    myReverse[strlen(input)-1] = '\0';
     strrev(myReverse);
     strcat(myReverse, "\n\0");
     // Not sure about the missing \0 from the reverse server.
@@ -127,7 +128,7 @@ char * generate_testdata (int len)
     char *pattern = "ABCDEFGHIJKLMNOPQ";
     unsigned j = 0;
     p = (char *) malloc(2048);
-    memset(p, 0, 2048);
+    memset(p, 0, 2048); 
     for (unsigned i=0; i < len; ++i)
     {
         p[i] = pattern[j];
@@ -141,6 +142,22 @@ char * generate_testdata (int len)
         }
     }
     return(p);
+}
+/**
+ * Create an input for the reverse server with test_length.
+ * Send this message to the reverse server and checks the 
+ * anser is a correct reverse from the input.
+ * Free the memory for the generated test data.
+ * 
+ * @sock socket we use for the connection.
+ * @param test_length for the test data
+ */
+void perform_test(int sock, int test_length) {
+    char *testMessage;
+    testMessage = generate_testdata(test_length);
+    fprintf(stdout, "Test with %d bytes \n", test_length);
+    send_and_compare(sock, testMessage);
+    free(testMessage);     
 }
 
 int main(int argc, char** argv)
@@ -183,30 +200,71 @@ int main(int argc, char** argv)
     sock = make_connection(port);
 
 
-//keep communicating with server       
+//keep communicating with server      
+//while(1)
+//{
    // printf("Send message : ");        
    // scanf("%s" , message);
+    
+    // Send some data without \n and finally a last datagram with \n
+    puts("Test with 3 datagrams, last with \\n \n");
     char *testMessage;
-    testMessage = generate_testdata(8);
-    puts("Test with 8 bytes");
-    send_and_compare(sock, testMessage);
-    free(testMessage);
+    testMessage = generate_testdata(10);
+    strcpy(message, testMessage);
+    if( send(sock , testMessage , strlen(testMessage) , 0) < 0)
+    {
+        puts("Send failed");
+        exit(1);
+    }
+    strcat(message, testMessage);
+    if( send(sock , testMessage , strlen(testMessage) , 0) < 0)
+    {
+        puts("Send failed");
+        exit(1);
+    }
     
-    testMessage = generate_testdata(510);
-    puts("Test with 510 bytes");
-    send_and_compare(sock, testMessage);
-    free(testMessage);
-  
-    testMessage = generate_testdata(512);
-    puts("Test with 512 bytes");
-    send_and_compare(sock, testMessage);
-    free(testMessage);
+    strcat(testMessage, "\n");
+    strcat(message, testMessage);
     
-    testMessage = generate_testdata(513);
-    puts("Test with 513 bytes");
-    send_and_compare(sock, testMessage);
-    free(testMessage);
+   if( send(sock , testMessage , strlen(testMessage) , 0) < 0)
+    {
+        puts("Send failed");
+        exit(1);
+    }    
     
+    char * output;
+    output = malloc(2000);
+       //Receive a reply from the server
+    if( recv(sock , output , 2000 , 0) <= 0)
+    {
+        puts("recv failed");
+        exit(1);
+    }
+    
+    if (check_reverse(message, output))
+    {
+       puts("server_reply is not a reverse String from message!"); 
+       puts("message :");
+       puts(message);       
+       puts("Server reply :");
+       puts(output); 
+    }    
+
+    free(output);  
+    free(testMessage);  
+
+    perform_test(sock, 1);
+    perform_test(sock, 8);
+    perform_test(sock, 510);   
+    perform_test(sock, 511);
+    perform_test(sock, 512);
+    perform_test(sock, 513);
+    perform_test(sock, 1023);
+ //   perform_test(sock, 1024);
+ //   perform_test(sock, 1025);
+    
+   
+//}    
     
     close(sock);
 
