@@ -18,11 +18,12 @@ void reverse(char* buffer)
 {
     size_t len = strlen(buffer);
 
+/** Remove code, see Task 6.
     if (len > 512)
     {
         len = 512;
     }
-
+*/
     for (size_t pos = 0; pos < len/2; ++pos)
     {
         char temp = buffer[pos];
@@ -175,7 +176,7 @@ int handle_connection(connection_t *conn)
 
         free(buffer);
 
-        memmove(conn->buffer, conn->buffer + len + 1, conn->size - conn->pos);
+//        memmove(conn->buffer, conn->buffer + len + 1, conn->size - conn->pos);
         conn->pos -= len + 1;
     }
 
